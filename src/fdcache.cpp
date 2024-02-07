@@ -34,6 +34,7 @@
 #include "s3fs_cred.h"
 #include "string_util.h"
 #include "autolock.h"
+#include "whereami/whereami.h"
 
 //
 // The following symbols are used by FdManager::RawCheckAllCache().
@@ -87,7 +88,7 @@ off_t           FdManager::fake_used_disk_space = 0;
 std::string     FdManager::check_cache_output;
 bool            FdManager::checked_lseek(false);
 bool            FdManager::have_lseek_hole(false);
-std::string     FdManager::tmp_dir = "/tmp";
+std::string     FdManager::tmp_dir = compare_sysname("MSYS_NT") ? get_current_exe_path() + "/tmp" : "/tmp";
 
 //------------------------------------------------
 // FdManager class methods

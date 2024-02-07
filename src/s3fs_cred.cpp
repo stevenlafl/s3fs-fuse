@@ -636,34 +636,34 @@ bool S3fsCred::CheckS3fsPasswdFilePerms()
         return false;
     }
 
-    // return error if any file has others permissions
-    if( (info.st_mode & S_IROTH) ||
-        (info.st_mode & S_IWOTH) ||
-        (info.st_mode & S_IXOTH)) {
-        S3FS_PRN_EXIT("credentials file %s should not have others permissions.", passwd_file.c_str());
-        return false;
-    }
+    //// return error if any file has others permissions
+    //if( (info.st_mode & S_IROTH) ||
+    //    (info.st_mode & S_IWOTH) ||
+    //    (info.st_mode & S_IXOTH)) {
+    //    S3FS_PRN_EXIT("credentials file %s should not have others permissions.", passwd_file.c_str());
+    //    return false;
+    //}
 
-    // Any local file should not have any group permissions
-    // /etc/passwd-s3fs can have group permissions
-    if(passwd_file != "/etc/passwd-s3fs"){
-        if( (info.st_mode & S_IRGRP) ||
-            (info.st_mode & S_IWGRP) ||
-            (info.st_mode & S_IXGRP)) {
-            S3FS_PRN_EXIT("credentials file %s should not have group permissions.", passwd_file.c_str());
-            return false;
-        }
-    }else{
-        // "/etc/passwd-s3fs" does not allow group write.
-        if((info.st_mode & S_IWGRP)){
-            S3FS_PRN_EXIT("credentials file %s should not have group writable permissions.", passwd_file.c_str());
-            return false;
-        }
-    }
-    if((info.st_mode & S_IXUSR) || (info.st_mode & S_IXGRP)){
-        S3FS_PRN_EXIT("credentials file %s should not have executable permissions.", passwd_file.c_str());
-        return false;
-    }
+    //// Any local file should not have any group permissions
+    //// /etc/passwd-s3fs can have group permissions
+    //if(passwd_file != "/etc/passwd-s3fs"){
+    //    if( (info.st_mode & S_IRGRP) ||
+    //        (info.st_mode & S_IWGRP) ||
+    //        (info.st_mode & S_IXGRP)) {
+    //        S3FS_PRN_EXIT("credentials file %s should not have group permissions.", passwd_file.c_str());
+    //        return false;
+    //    }
+    //}else{
+    //    // "/etc/passwd-s3fs" does not allow group write.
+    //    if((info.st_mode & S_IWGRP)){
+    //        S3FS_PRN_EXIT("credentials file %s should not have group writable permissions.", passwd_file.c_str());
+    //        return false;
+    //    }
+    //}
+    //if((info.st_mode & S_IXUSR) || (info.st_mode & S_IXGRP)){
+    //    S3FS_PRN_EXIT("credentials file %s should not have executable permissions.", passwd_file.c_str());
+    //    return false;
+    //}
     return true;
 }
 

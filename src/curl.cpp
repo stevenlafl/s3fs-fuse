@@ -41,6 +41,8 @@
 #include "string_util.h"
 #include "addhead.h"
 
+#include "whereami/whereami.h"
+
 //-------------------------------------------------------------------
 // Symbols
 //-------------------------------------------------------------------
@@ -50,8 +52,8 @@ static const char EMPTY_MD5_BASE64_HASH[]           = "1B2M2Y8AsgTpgAmY7PhCfg=="
 //-------------------------------------------------------------------
 // Class S3fsCurl
 //-------------------------------------------------------------------
-static const int MULTIPART_SIZE                     = 10 * 1024 * 1024;
-static const int GET_OBJECT_RESPONSE_LIMIT          = 1024;
+static const int MULTIPART_SIZE = 10 * 1024 * 1024;
+static const int GET_OBJECT_RESPONSE_LIMIT = 1024;
 
 // [NOTE] about default mime.types file
 // If no mime.types file is specified in the mime option, s3fs
@@ -64,8 +66,8 @@ static const int GET_OBJECT_RESPONSE_LIMIT          = 1024;
 // If the mime.types file is not found, s3fs will exit with an
 // error.
 //
-static const char DEFAULT_MIME_FILE[]               = "/etc/mime.types";
-static const char SPECIAL_DARWIN_MIME_FILE[]        = "/etc/apache2/mime.types";
+static const char DEFAULT_MIME_FILE[] = "/etc/mime.types";
+static const char SPECIAL_DARWIN_MIME_FILE[] = "/etc/apache2/mime.types";
 
 // [NOTICE]
 // This symbol is for libcurl under 7.23.0
@@ -82,26 +84,26 @@ const int        S3fsCurl::S3FSCURL_PERFORM_RESULT_NOTSET;
 pthread_mutex_t  S3fsCurl::curl_warnings_lock;
 pthread_mutex_t  S3fsCurl::curl_handles_lock;
 S3fsCurl::callback_locks_t S3fsCurl::callback_locks;
-bool             S3fsCurl::is_initglobal_done  = false;
-CurlHandlerPool* S3fsCurl::sCurlPool           = NULL;
-int              S3fsCurl::sCurlPoolSize       = 32;
-CURLSH*          S3fsCurl::hCurlShare          = NULL;
-bool             S3fsCurl::is_cert_check       = true; // default
-bool             S3fsCurl::is_dns_cache        = true; // default
-bool             S3fsCurl::is_ssl_session_cache= true; // default
-long             S3fsCurl::connect_timeout     = 300;  // default
-time_t           S3fsCurl::readwrite_timeout   = 120;  // default
-int              S3fsCurl::retries             = 5;    // default
-bool             S3fsCurl::is_public_bucket    = false;
-acl_t            S3fsCurl::default_acl         = acl_t::PRIVATE;
-std::string      S3fsCurl::storage_class       = "STANDARD";
+bool             S3fsCurl::is_initglobal_done = false;
+CurlHandlerPool* S3fsCurl::sCurlPool = NULL;
+int              S3fsCurl::sCurlPoolSize = 32;
+CURLSH* S3fsCurl::hCurlShare = NULL;
+bool             S3fsCurl::is_cert_check = true; // default
+bool             S3fsCurl::is_dns_cache = true; // default
+bool             S3fsCurl::is_ssl_session_cache = true; // default
+long             S3fsCurl::connect_timeout = 300;  // default
+time_t           S3fsCurl::readwrite_timeout = 120;  // default
+int              S3fsCurl::retries = 5;    // default
+bool             S3fsCurl::is_public_bucket = false;
+acl_t            S3fsCurl::default_acl = acl_t::PRIVATE;
+std::string      S3fsCurl::storage_class = "STANDARD";
 sseckeylist_t    S3fsCurl::sseckeys;
 std::string      S3fsCurl::ssekmsid;
-sse_type_t       S3fsCurl::ssetype             = sse_type_t::SSE_DISABLE;
-bool             S3fsCurl::is_content_md5      = false;
-bool             S3fsCurl::is_verbose          = false;
-bool             S3fsCurl::is_dump_body        = false;
-S3fsCred*        S3fsCurl::ps3fscred           = NULL;
+sse_type_t       S3fsCurl::ssetype = sse_type_t::SSE_DISABLE;
+bool             S3fsCurl::is_content_md5 = false;
+bool             S3fsCurl::is_verbose = false;
+bool             S3fsCurl::is_dump_body = false;
+S3fsCred* S3fsCurl::ps3fscred = NULL;
 long             S3fsCurl::ssl_verify_hostname = 1;    // default(original code...)
 
 // protected by curl_warnings_lock
@@ -114,17 +116,17 @@ curlprogress_t   S3fsCurl::curl_progress;
 std::string      S3fsCurl::curl_ca_bundle;
 mimes_t          S3fsCurl::mimeTypes;
 std::string      S3fsCurl::userAgent;
-int              S3fsCurl::max_parallel_cnt    = 5;              // default
-int              S3fsCurl::max_multireq        = 20;             // default
-off_t            S3fsCurl::multipart_size      = MULTIPART_SIZE; // default
+int              S3fsCurl::max_parallel_cnt = 5;              // default
+int              S3fsCurl::max_multireq = 20;             // default
+off_t            S3fsCurl::multipart_size = MULTIPART_SIZE; // default
 off_t            S3fsCurl::multipart_copy_size = 512 * 1024 * 1024;  // default
-signature_type_t S3fsCurl::signature_type      = V2_OR_V4;       // default
+signature_type_t S3fsCurl::signature_type = V2_OR_V4;       // default
 bool             S3fsCurl::is_unsigned_payload = false;          // default
-bool             S3fsCurl::is_ua               = true;           // default
-bool             S3fsCurl::listobjectsv2       = false;          // default
-bool             S3fsCurl::requester_pays      = false;          // default
+bool             S3fsCurl::is_ua = true;           // default
+bool             S3fsCurl::listobjectsv2 = false;          // default
+bool             S3fsCurl::requester_pays = false;          // default
 std::string      S3fsCurl::proxy_url;
-bool             S3fsCurl::proxy_http          = false;
+bool             S3fsCurl::proxy_http = false;
 std::string      S3fsCurl::proxy_userpwd;
 
 //-------------------------------------------------------------------
@@ -137,16 +139,19 @@ bool S3fsCurl::InitS3fsCurl()
 #if S3FS_PTHREAD_ERRORCHECK
     pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
 #endif
-    if(0 != pthread_mutex_init(&S3fsCurl::curl_warnings_lock, &attr)){
+    if (0 != pthread_mutex_init(&S3fsCurl::curl_warnings_lock, &attr)) {
         return false;
     }
-    if(0 != pthread_mutex_init(&S3fsCurl::curl_handles_lock, &attr)){
+    if (0 != pthread_mutex_init(&S3fsCurl::curl_handles_lock, &attr)) {
         return false;
     }
-    if(0 != pthread_mutex_init(&S3fsCurl::callback_locks.dns, &attr)){
+    if (0 != pthread_mutex_init(&S3fsCurl::callback_locks.dns, &attr)) {
         return false;
     }
-    if(0 != pthread_mutex_init(&S3fsCurl::callback_locks.ssl_session, &attr)){
+    if (0 != pthread_mutex_init(&S3fsCurl::callback_locks.ssl_session, &attr)) {
+        return false;
+    }
+    if(!S3fsCurl::LocateBundle()){
         return false;
     }
     if(!S3fsCurl::InitGlobalCurl()){
@@ -398,6 +403,17 @@ bool S3fsCurl::InitMimeType(const std::string& strFile)
                 errPaths += " and ";
                 errPaths += SPECIAL_DARWIN_MIME_FILE;
             }
+        }else if (compare_sysname("MSYS_NT")){
+
+            const char* SPECIAL_WINDOWS_MIME_FILE = (get_current_exe_path() + "/mime.types").c_str();
+            // for Windows, search another default file.
+            if (0 == stat(SPECIAL_WINDOWS_MIME_FILE, &st)) {
+                MimeFile = SPECIAL_WINDOWS_MIME_FILE;
+            }
+            else {
+                errPaths += " and ";
+                errPaths += SPECIAL_WINDOWS_MIME_FILE;
+            }
         }
         if(MimeFile.empty()){
             S3FS_PRN_WARN("Could not find mime.types files, you have to create file(%s) or specify mime option for existing mime.types file.", errPaths.c_str());
@@ -550,6 +566,7 @@ bool S3fsCurl::LocateBundle()
     // dnl /usr/local/share/certs/ca-root.crt FreeBSD
     // dnl /etc/ssl/cert.pem OpenBSD
     // dnl /etc/ssl/certs/ (ca path) SUSE
+    // dnl /path/to/exe/ca-bundle.crt Windows
     ///////////////////////////////////////////
     // Within CURL the above path should have been checked
     // according to the OS. Thus, although we do not need
@@ -575,8 +592,15 @@ bool S3fsCurl::LocateBundle()
                     BF.close();
                     S3fsCurl::curl_ca_bundle = "/usr/share/ssl/certs/ca-bundle.crt";
                 }else{
-                    S3FS_PRN_ERR("%s: /.../ca-bundle.crt is not readable", program_name.c_str());
-                    return false;
+                    printf((get_current_exe_path() + "/ca-bundle.crt").c_str());
+                    BF.open(get_current_exe_path() + "/ca-bundle.crt");
+                    if (BF.good()) {
+                        BF.close();
+                        S3fsCurl::curl_ca_bundle = get_current_exe_path() + "/ca-bundle.crt";
+                    }else{
+                        S3FS_PRN_ERR("%s: /.../ca-bundle.crt is not readable", program_name.c_str());
+                        return false;
+                    }
                 }
             }
         }

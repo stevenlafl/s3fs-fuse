@@ -425,7 +425,7 @@ bool compare_sysname(const char* target)
         psysname = &sysname[0];
     }
 
-    if(!target || 0 != strcmp(psysname, target)){
+    if(!target || 0 != strncmp(psysname, target, strlen(target))){
         return false;
     }
     return true;

@@ -28,6 +28,7 @@ if USE_SSL_OPENSSL_30
 endif
 
 s3fs_SOURCES = \
+    whereami/whereami.cpp \
     s3fs.cpp \
     s3fs_global.cpp \
     s3fs_help.cpp \
