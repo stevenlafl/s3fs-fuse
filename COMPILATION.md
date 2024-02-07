@@ -139,11 +139,11 @@ On Windows, use [MSYS2](https://www.msys2.org/) to compile for itself.
        application/vnd.oasis.opendocument.spreadsheet   ods;
        application/vnd.oasis.opendocument.text          odt;
        application/vnd.openxmlformats-officedocument.presentationml.presentation
-                                                     pptx;
+                                                        pptx;
        application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
-                                                     xlsx;
+                                                        xlsx;
        application/vnd.openxmlformats-officedocument.wordprocessingml.document
-                                                     docx;
+                                                        docx;
        application/vnd.wap.wmlc                         wmlc;
        application/wasm                                 wasm;
        application/x-7z-compressed                      7z;
